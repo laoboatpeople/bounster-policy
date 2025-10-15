@@ -219,7 +219,7 @@ Enum with values:
 
 ## License
 
-This project is released into the public domain. Feel free to use, modify, and distribute as needed.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
