@@ -1,94 +1,224 @@
-<script>
-(function () {
-  const gallery = document.getElementById('gallery');
-  const dotsWrap = document.getElementById('gallery-dots');
-  const phonePreview = gallery.closest('.phone-preview');
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bounster — Connect, Play, Stay Active</title>
+  <meta name="description" content="Bounster is a mobile app that helps you connect with others and stay active by doing sports and activities together." />
+  <meta property="og:title" content="Bounster — Connect, Play, Stay Active" />
+  <meta property="og:description" content="Find people nearby to play sports and do activities together. Stay active with Bounster." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=Bounster" />
+  <meta name="theme-color" content="#0b57d0" />
 
-  const slides = () => Array.from(gallery.querySelectorAll('img'));
-  let index = 0;
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --card: #0f1218;
+      --text: #e8eefc;
+      --muted: #a9b6d3;
+      --brand: #0b57d0;
+      --brand-2: #53b3ff;
+      --ok: #21c085;
+      --shadow: 0 10px 30px rgba(0,0,0,.3);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    a { color: var(--brand-2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { width: min(1100px, 92%); margin: 0 auto; }
 
-  // --- helpers
-  const mod = (n, m) => ((n % m) + m) % m;
+    header { position: sticky; top: 0; backdrop-filter: blur(8px); background: rgba(10,12,16,.6); border-bottom: 1px solid rgba(255,255,255,.06); z-index: 10; }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .logo-badge { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: var(--shadow); font-weight: 900; }
 
-  function goTo(i, smooth = true) {
-    const n = slides().length;
-    index = mod(i, n);
-    gallery.scrollTo({ left: index * gallery.clientWidth, behavior: smooth ? 'smooth' : 'auto' });
-    updateDots();
-  }
+    .hero { padding: 70px 0 30px; }
+    .hero-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 36px; align-items: center; }
+    .hero h1 { font-size: clamp(32px, 4vw, 54px); margin: 0 0 14px; }
+    .hero p { margin: 0 0 22px; color: var(--muted); font-size: 18px; }
 
-  // --- arrows API
-  window.scrollGallery = function (dir) {
-    const current = Math.round(gallery.scrollLeft / gallery.clientWidth);
-    goTo(current + (dir > 0 ? 1 : -1));
-  };
+    .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: #121722; color: #fff; font-weight: 600; box-shadow: var(--shadow); }
+    .btn.primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); border: none; }
 
-  // --- dots
-  function renderDots() {
-    dotsWrap.innerHTML = '';
-    slides().forEach((_, i) => {
-      const b = document.createElement('button');
-      b.className = 'dot';
-      b.type = 'button';
-      b.setAttribute('aria-label', `Aller à l’image ${i + 1}`);
-      b.addEventListener('click', () => {
-        stopAuto(); // l’utilisateur a interagi, on pause
-        goTo(i);
-      });
-      dotsWrap.appendChild(b);
-    });
-    updateDots();
-  }
+    .phone-preview {
+      max-width: 380px; margin: 40px auto; border-radius: 25px; overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4); background: #000; border: 2px solid rgba(255,255,255,0.1); position: relative;
+    }
+    .gallery {
+      display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
+      scrollbar-width: none;
+    }
+    .gallery::-webkit-scrollbar { display: none; }
+    .gallery img { width: 100%; flex: 0 0 100%; border-radius: 25px; scroll-snap-align: start; }
 
-  function updateDots() {
-    const dots = Array.from(dotsWrap.children);
-    dots.forEach((d, i) => d.classList.toggle('active', i === index));
-  }
+    .arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,0.5); color: white; border: none; font-size: 24px;
+      cursor: pointer; padding: 10px 14px; border-radius: 50%;
+    }
+    .arrow:hover { background: rgba(0,0,0,0.8); }
+    .arrow.left { left: 10px; }
+    .arrow.right { right: 10px; }
 
-  // --- resize: garder la diapo courante
-  window.addEventListener('resize', () => goTo(index, false));
+    /* Dots sous la galerie */
+    .dots {
+      display:flex; gap:8px; justify-content:center; align-items:center;
+      padding:10px 0 14px;
+    }
+    .dot {
+      width:8px; height:8px; border-radius:50%;
+      background: rgba(255,255,255,.25);
+      border: 1px solid rgba(255,255,255,.35);
+      cursor:pointer;
+      transition: transform .2s ease, background-color .2s ease;
+    }
+    .dot:hover { transform: scale(1.2); }
+    .dot.active { background:#fff; }
 
-  // --- clavier
-  gallery.setAttribute('tabindex', '0');
-  gallery.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') { e.preventDefault(); stopAuto(); window.scrollGallery(1); }
-    if (e.key === 'ArrowLeft')  { e.preventDefault(); stopAuto(); window.scrollGallery(-1); }
-  });
+    .section { padding: 70px 0; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .card { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
+    .muted { color: var(--muted); }
 
-  // --- snap après scroll manuel
-  let scrollTimeout;
-  gallery.addEventListener('scroll', () => {
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-      const current = Math.round(gallery.scrollLeft / gallery.clientWidth);
-      index = current;
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container nav">
+      <div class="logo">
+        <div class="logo-badge">B</div>
+        <span>Bounster</span>
+      </div>
+      <nav class="navlinks">
+        <a href="#features">Features</a>
+        <a href="#how">How it Works</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container" id="home">
+      <div class="hero-grid">
+        <div>
+          <h1>Connect with others and stay active — together.</h1>
+          <p>Bounster helps you discover nearby people and activities, so you can play sports, try new workouts, and build healthy habits with friends.</p>
+          <div class="cta">
+            <a class="btn primary" href="#download">Get the App</a>
+            <a class="btn" href="#features">See Features</a>
+          </div>
+        </div>
+
+        <!-- Image gallery -->
+        <div class="phone-preview">
+          <button class="arrow left" onclick="scrollGallery(-1)">❮</button>
+          <div class="gallery" id="gallery">
+            <img src="Screenshot_1760547846.png" alt="Bounster App Preview 1" />
+            <img src="Screenshot_1760547858.png" alt="Bounster App Preview 2" />
+            <img src="Screenshot_1760547876.png" alt="Bounster App Preview 3" />
+            <img src="Screenshot_1760547808.png" alt="Bounster App Preview 4" />
+            <img src="Screenshot_1760547815.png" alt="Bounster App Preview 5" />
+          </div>
+          <div class="dots" id="gallery-dots" aria-label="Carousel pagination"></div>
+          <button class="arrow right" onclick="scrollGallery(1)">❯</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container" id="features">
+      <h2>Why Bounster?</h2>
+      <p class="muted">Simple tools to find partners, plan sessions, and keep moving.</p>
+      <div class="cards">
+        <article class="card"><h3>Find partners nearby</h3><p class="muted">Match with people who want to play the same sport at the same time.</p></article>
+        <article class="card"><h3>Create & join activities</h3><p class="muted">Set a place and time, choose the sport, and invite others in seconds.</p></article>
+        <article class="card"><h3>Chat & confirm</h3><p class="muted">In-app messages to finalize details and keep everyone on track.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  (function () {
+    const gallery = document.getElementById('gallery');
+    const dotsWrap = document.getElementById('gallery-dots');
+    const phonePreview = gallery.closest('.phone-preview');
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const slides = () => Array.from(gallery.querySelectorAll('img'));
+    let index = 0;
+
+    const mod = (n, m) => ((n % m) + m) % m;
+    function goTo(i, smooth = true) {
+      const n = slides().length;
+      index = mod(i, n);
+      gallery.scrollTo({ left: index * gallery.clientWidth, behavior: smooth ? 'smooth' : 'auto' });
       updateDots();
-    }, 120);
-  });
+    }
+    window.scrollGallery = function (dir) {
+      const current = Math.round(gallery.scrollLeft / gallery.clientWidth);
+      goTo(current + (dir > 0 ? 1 : -1));
+    };
 
-  // --- auto-slide
-  const INTERVAL = 3500;
-  let timer = null;
-  function startAuto() {
-    if (prefersReduced || timer) return;
-    timer = setInterval(() => window.scrollGallery(1), INTERVAL);
-  }
-  function stopAuto() {
-    if (timer) clearInterval(timer);
-    timer = null;
-  }
+    function renderDots() {
+      dotsWrap.innerHTML = '';
+      slides().forEach((_, i) => {
+        const b = document.createElement('button');
+        b.className = 'dot';
+        b.type = 'button';
+        b.setAttribute('aria-label', `Go to image ${i + 1}`);
+        b.addEventListener('click', () => { stopAuto(); goTo(i); });
+        dotsWrap.appendChild(b);
+      });
+      updateDots();
+    }
 
-  // pause sur survol/focus et onglet caché
-  ['mouseenter','focusin','touchstart'].forEach(ev => phonePreview.addEventListener(ev, stopAuto));
-  ['mouseleave','focusout','touchend'].forEach(ev => phonePreview.addEventListener(ev, startAuto));
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopAuto(); else startAuto();
-  });
+    function updateDots() {
+      const dots = Array.from(dotsWrap.children);
+      dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    }
 
-  // init
-  renderDots();
-  goTo(0, false);
-  startAuto();
-})();
-</script>
+    window.addEventListener('resize', () => goTo(index, false));
+    gallery.setAttribute('tabindex', '0');
+    gallery.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); stopAuto(); window.scrollGallery(1); }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); stopAuto(); window.scrollGallery(-1); }
+    });
+
+    let scrollTimeout;
+    gallery.addEventListener('scroll', () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const current = Math.round(gallery.scrollLeft / gallery.clientWidth);
+        index = current;
+        updateDots();
+      }, 120);
+    });
+
+    const INTERVAL = 3500;
+    let timer = null;
+    function startAuto() {
+      if (prefersReduced || timer) return;
+      timer = setInterval(() => window.scrollGallery(1), INTERVAL);
+    }
+    function stopAuto() {
+      if (timer) clearInterval(timer);
+      timer = null;
+    }
+
+    ['mouseenter','focusin','touchstart'].forEach(ev => phonePreview.addEventListener(ev, stopAuto));
+    ['mouseleave','focusout','touchend'].forEach(ev => phonePreview.addEventListener(ev, startAuto));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stopAuto(); else startAuto(); });
+
+    renderDots();
+    goTo(0, false);
+    startAuto();
+  })();
+  </script>
+</body>
+</html>
