@@ -41,14 +41,28 @@
     .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: #121722; color: #fff; font-weight: 600; box-shadow: var(--shadow); }
     .btn.primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); border: none; }
     .phone { background: var(--card); border: 1px solid rgba(255,255,255,.08); border-radius: 22px; padding: 16px; box-shadow: var(--shadow); }
- .phone-preview {max-width: 380px; margin: 40px auto; border-radius: 25px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.4); background: #000; border: 2px solid rgba(255,255,255,0.1); position: relative;}
-.gallery {display: flex; overflow-x: scroll; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;}
-.gallery img {width: 100%; flex-shrink: 0; border-radius: 25px; scroll-snap-align: start;}
-.arrow {position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; font-size: 24px; cursor: pointer; padding: 10px 14px; border-radius: 50%;}
-.arrow:hover {background: rgba(0,0,0,0.8);}
-.arrow.left {left: 10px;}
-.arrow.right {right: 10px;}
-img {width: 100%; display: block; border-radius: 25px;}
+
+    .phone-preview {
+      max-width: 380px; margin: 40px auto; border-radius: 25px; overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4); background: #000; border: 2px solid rgba(255,255,255,0.1); position: relative;
+    }
+    .gallery {
+      display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
+      scrollbar-width: none; /* Firefox */
+    }
+    .gallery::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+    .gallery img { width: 100%; flex: 0 0 100%; border-radius: 25px; scroll-snap-align: start; }
+    .arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,0.5); color: white; border: none; font-size: 24px;
+      cursor: pointer; padding: 10px 14px; border-radius: 50%;
+    }
+    .arrow:hover { background: rgba(0,0,0,0.8); }
+    .arrow.left { left: 10px; }
+    .arrow.right { right: 10px; }
+    img { width: 100%; display: block; border-radius: 25px; }
+
     .screen { aspect-ratio: 9/19.5; border-radius: 16px; background: radial-gradient(1200px 600px at -10% -20%, rgba(83,179,255,.25), transparent), radial-gradient(900px 600px at 120% 120%, rgba(11,87,208,.3), transparent), #0b0f17; border: 1px solid rgba(255,255,255,.06); display: grid; place-items: center; color: var(--muted); font-size: 14px; }
 
     .badges { display: flex; gap: 10px; margin-top: 8px; }
@@ -105,25 +119,27 @@ img {width: 100%; display: block; border-radius: 25px;}
             <a class="btn" href="#features">See Features</a>
           </div>
           <div class="badges" id="download" aria-label="Download">
-            <!-- Replace with real store links when ready -->
             <a class="badge" href="#">App Store (coming soon)</a>
             <a class="badge" href="#">Google Play (coming soon)</a>
           </div>
         </div>
+
+        <!-- Image gallery -->
         <div class="phone-preview">
-        <button class="arrow left" onclick="scrollGallery(-1)">❮</button>
-        <div class="gallery" id="gallery">
-          <img src="Screenshot_1760547846.png" alt="Bounster App Preview 1" />
-          <img src="Screenshot_1760547858.png" alt="Bounster App Preview 2" />
-          <img src="Screenshot_1760547876.png" alt="Bounster App Preview 3" />
-          <img src="Screenshot_1760547808.png" alt="Bounster App Preview 4" />
-          <img src="Screenshot_1760547815.png" alt="Bounster App Preview 5" />
-            </div>
-        <button class="arrow right" onclick="scrollGallery(1)">❯</button>
+          <button class="arrow left" aria-label="Previous screenshot" onclick="scrollGallery(-1)">❮</button>
+          <div class="gallery" id="gallery">
+            <img src="Screenshot_1760547846.png" alt="Bounster App Preview 1" />
+            <img src="Screenshot_1760547858.png" alt="Bounster App Preview 2" />
+            <img src="Screenshot_1760547876.png" alt="Bounster App Preview 3" />
+            <img src="Screenshot_1760547808.png" alt="Bounster App Preview 4" />
+            <img src="Screenshot_1760547815.png" alt="Bounster App Preview 5" />
+          </div>
+          <button class="arrow right" aria-label="Next screenshot" onclick="scrollGallery(1)">❯</button>
         </div>
-     
+      </div>
     </section>
 
+    <!-- Other sections (kept from your file) -->
     <section class="section container" id="features">
       <h2>Why Bounster?</h2>
       <p class="muted">Simple tools to find partners, plan sessions, and keep moving.</p>
@@ -138,7 +154,7 @@ img {width: 100%; display: block; border-radius: 25px;}
         </article>
         <article class="card" role="listitem">
           <h3>Chat & confirm</h3>
-          <p class="muted">In‑app messages to finalize details and keep everyone on track.</p>
+          <p class="muted">In-app messages to finalize details and keep everyone on track.</p>
         </article>
       </div>
     </section>
@@ -170,3 +186,43 @@ img {width: 100%; display: block; border-radius: 25px;}
         <article class="card">
           <h3>Is Bounster free?</h3>
           <p class="muted">Yes. Core features are free while we build out the community. Some pro features may be added later.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const gallery = document.getElementById('gallery');
+      const slides = () => Array.from(gallery.querySelectorAll('img'));
+      let index = 0;
+
+      function clamp(n, min, max) { return Math.max(min, Math.min(n, max)); }
+
+      function goTo(i) {
+        index = clamp(i, 0, slides().length - 1);
+        const offset = index * gallery.clientWidth;
+        gallery.scrollTo({ left: offset, behavior: 'smooth' });
+      }
+
+      window.scrollGallery = function (dir) {
+        const current = Math.round(gallery.scrollLeft / gallery.clientWidth);
+        goTo(current + (dir > 0 ? 1 : -1));
+      };
+
+      // Adjust index on resize to keep the current slide centered
+      window.addEventListener('resize', () => goTo(index));
+
+      // Keyboard support when the gallery region has focus/hover
+      gallery.setAttribute('tabindex', '0');
+      gallery.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); window.scrollGallery(1); }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); window.scrollGallery(-1); }
+      });
+
+      // Snap to nearest slide after manual drag/scroll
+      let scrollTimeout;
+      gallery.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const current = Math.round(gallery.scrollLeft / gallery.clien
